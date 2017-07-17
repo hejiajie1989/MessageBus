@@ -1,1 +1,23 @@
 
+实现一个通用总线消息框架
+
+MessageBus在整个系统中作为单例对象存在，任何对象将自己感兴趣的消息主题注册到消息总线上，MessageBus可以通过调用SendReq()发出任何消息，那么曾经注册过该消息主题的观察者就会触发回调函数
+
+因为最后触发的都是回调函数Callback，我们考虑将函数签名作为消息类型的区分，回调函数是可调用对象，可以是lambda表达式、普通函数、函数指针、类的成员函数等等。为了在上层不需要考虑这么多种类型的可调用对象，我们在上层将可调用对象封装，设计成std::function<R(Args...)>的形式，将可调用对象保存在std::function里面。这样子以来消息总线只需要保存std::function对象即可。
+
+其次我们为了增加消息主题的功能(也就是说可能存在两个对象的回调函数签名是一致的，但是两个人感兴趣的不是同一件事，我们需要设置一个string来保存消息主题)，那么这样子以来的话对于MessageBus来说真正需要保存的消息主题+std::function<R(Args...)>.
+
+我们设计在MessageBus中定义一个multimap<string, std::function<R(Args...)>>, key是消息主题+函数签名的字符串，value是std::function<R(Args...)>
+
+这里又遇到一个问题，即`std::function<R(Args...)>`事实上可以有很多种类型，为了将它们都能够保存在multimap中，就需要去类型化。
+在Boost中有个any类专门就是将任意类型的元素保存到同一个容器中(**实现这个原理是使用了基类和子类的区别，真正的数据类型是在子类中保存的，我们通过一个基类的指针指向子类，在运行时根据多态然后决定是否将基类转化成适当的子类，以此来实现去类型化**)。
+于是我们这边设计一个Any类，专门封装std::function<R(Args...)>的具体类型。
+这样子一来的话multimap的真正类型就是`std::multimap<string, Any>`
+
+
+Any.h 设计一个类专门做类型擦除
+MessageBus.h 消息总线类，提供注册消息和发送消息的能力
+NonCopyable.h 一个虚基类，可以使子类禁用复制和赋值的功能
+function_traits.h 专门对函数特性进行萃取，上面我们也提到对于MessageBus来说所有的可调用对象都是std::function<R(Args...)> ,那么就需要将原先的可调用对象进行转换。
+TestMessageBus.cpp 一个简单的例子，测试MessagBus注册消息和发送消息的功能
+test.cpp 设计Car、Bus、Truck三个类，尝试注册消息到总线已经能够接受处理自己关心的消息。
