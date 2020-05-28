@@ -115,17 +115,6 @@ struct Truck
     }
 };
 
-struct MySt
-{
-    MySt(int b) : m_b(b) {}
-    void sum(int a)
-    {
-        cout << "MySt:" << a + m_b << endl;
-    }
-private:
-    int m_b;
-};
-
 int main()
 {
     Car car;
@@ -161,8 +150,6 @@ int main()
         }
     }
     g_bus.uninit();
-    std::string sql = "(a=b,c=d,e=f)";
-    auto q = std::count(sql.begin(), sql.end(), '=');
     std::cout << "*****exit*******" << std::endl;
     return 0;
 }
