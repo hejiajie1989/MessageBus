@@ -1,3 +1,4 @@
+#if 0
 #include <iostream>
 
 #include "MessageBus.h"
@@ -38,3 +39,4 @@ int main()
 	std::cout << "*********************" << std::endl;
 	return 0;
 }
+#endif
